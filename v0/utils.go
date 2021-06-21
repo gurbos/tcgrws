@@ -3,18 +3,20 @@ package main
 import (
 	"log"
 	"os"
-	"strconv"
 )
 
 type environment struct {
-	dbHost   string
-	dbPort   string
-	dbUser   string
-	dbPasswd string
-	dbName   string
+	dbHost     string
+	dbPort     string
+	dbUser     string
+	dbPasswd   string
+	dbName     string
+	imagesHost string
+	imagesDir  string
 }
 
 func (e *environment) loadEnvironment() {
+	var pres bool
 	if e.dbHost = os.Getenv("TCG_DB_HOST"); e.dbHost == "" {
 		log.Fatal("Error: 'TCG_DB_HOST' environment variable not set or does not exist!")
 	}
@@ -30,13 +32,12 @@ func (e *environment) loadEnvironment() {
 	if e.dbName = os.Getenv("TCG_DB_NAME"); e.dbName == "" {
 		log.Fatal("Error: 'TCG_DB_NAME' environment variable not set or does not exist!")
 	}
-}
-
-func joinInt64ListAsStr(list []int64, sep string) string {
-	numStr := strconv.Itoa(int(list[0]))
-	for _, elem := range list[1:] {
-		numStr += sep + strconv.Itoa(int(elem))
+	e.imagesHost, pres = os.LookupEnv("TCG_IMAGES_HOST")
+	if !pres {
+		log.Fatal("TCG_IMAGES_HOST environment variable not present")
 	}
-
-	return numStr
+	e.imagesDir, pres = os.LookupEnv("TCG_IMAGES_DIR")
+	if !pres {
+		log.Fatal("TCG_IMAGES_DIR environment variable not present")
+	}
 }

@@ -2,7 +2,6 @@ package dbio
 
 import (
 	"fmt"
-	"strings"
 
 	tcm "github.com/gurbos/tcmodels"
 	"gorm.io/driver/mysql"
@@ -33,45 +32,22 @@ func DBConnection() *gorm.DB {
 	return conn
 }
 
-// queryAllProductLines returns all product line info on the database
-func QueryAllProductLines() ([]tcm.ProductLine, error) {
-	var productLines []tcm.ProductLine // Database query results
-
-	dbconn := DBConnection() // Get database connection handle
-	if dbconn.Error != nil {
-		return productLines, dbconn.Error
-	}
-	tx := dbconn.Model(tcm.ProductLine{}).Find(&productLines) // Query database for all product line records
-	return productLines, tx.Error
-}
-
-func QueryProductLines(plName []string) ([]tcm.ProductLine, error) {
+func QueryProductLines(plNames []string) ([]tcm.ProductLine, error) {
 	var productLine []tcm.ProductLine // ProductLine query results
 	var dbErr error
+
 	dbconn := DBConnection() // Get database connection handle
 	if dbconn.Error == nil {
-		plStr := strings.Join(plName, ",") // String of product line names
-
-		// Query database for product line info
-		dbErr = dbconn.Raw("SELECT * FROM product_lines WHERE url_name IN (?)", plStr).
-			Find(&productLine).Error
+		switch {
+		case len(plNames) > 0:
+			dbErr = dbconn.Model(tcm.ProductLine{}).Where("name IN (?)", plNames).Find(&productLine).Error
+		default:
+			dbErr = dbconn.Model(tcm.ProductLine{}).Find(&productLine).Error
+		}
 	} else {
 		dbErr = dbconn.Error
 	}
 	return productLine, dbErr
-}
-
-// queryAllSets returns all card set info in the database
-func QueryAllSets() ([]tcm.SetInfo, error) {
-	var sets []tcm.SetInfo
-
-	dbconn := DBConnection()
-	if dbconn.Error != nil {
-		return sets, dbconn.Error
-	}
-
-	tx := dbconn.Model(tcm.SetInfo{}).Find(&sets)
-	return sets, tx.Error
 }
 
 /** NOTE: Work on **/
@@ -79,18 +55,16 @@ func QuerySets(productLineIDs []int64, setNames []string) ([]tcm.SetInfo, error)
 	var setInfos []tcm.SetInfo // Database query results
 	var qErr error             // Database query error
 
+	qm := make(map[string]interface{})
 	dbconn := DBConnection() // Get database connection handle
 	if dbconn.Error == nil {
-		if len(setNames) == 0 { // If set name list is empty, then query all sets
-			qErr = dbconn.Model(tcm.SetInfo{}).
-				Where("product_line_id IN = ?", productLineIDs).
-				Find(&setInfos).Error
-		} else { // If set name list not empty, then query specified sets only
-			qErr = dbconn.Model(tcm.SetInfo{}).
-				Where("product_line_id IN ?", productLineIDs).
-				Where("url_name IN ?", setNames).
-				Find(&setInfos).Error
+		switch {
+		case len(productLineIDs) > 0:
+			qm["product_line_id"] = &productLineIDs
+		case len(setNames) > 0:
+			qm["url_name"] = &setNames
 		}
+		qErr = dbconn.Model(tcm.SetInfo{}).Where(qm).Find(&setInfos).Error
 	} else {
 		qErr = dbconn.Error
 	}
@@ -98,7 +72,7 @@ func QuerySets(productLineIDs []int64, setNames []string) ([]tcm.SetInfo, error)
 	return setInfos, qErr
 }
 
-func QueryCards(plIDList []int64, setIDList []int64, offset int64, size int64) ([]tcm.YuGiOhCardInfo, error) {
+func QueryCards(plIDList []int64, setIDList []int64, offset int64, length int64) ([]tcm.YuGiOhCardInfo, error) {
 	var dbErr error
 	var cards []tcm.YuGiOhCardInfo
 
@@ -109,6 +83,8 @@ func QueryCards(plIDList []int64, setIDList []int64, offset int64, size int64) (
 			Preload("SetInfo").
 			Where("product_line_id IN ?", plIDList).
 			Where("set_id IN ?", setIDList).
+			Offset(int(offset)).
+			Limit(int(length)).
 			Find(&cards).Error
 	} else {
 		dbErr = dbconn.Error

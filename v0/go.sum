@@ -1,5 +1,8 @@
 github.com/go-sql-driver/mysql v1.6.0 h1:BCTh4TKNUYmOmMUcQ3IipzF5prigylS7XXjEkfCHuOE=
 github.com/go-sql-driver/mysql v1.6.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
+github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
+github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
+github.com/gurbos/tcgrws v0.0.0-20210619134319-032bbf3817ff h1:4SW4IQoKFvFNKVO6NshMk0tGkYG4waub6EsQyq4fctU=
 github.com/gurbos/tcmodels v1.4.3-beta h1:W+kFNZyLV9sI4KW09FWM/7pk07Hf7GgFUY9lZuciCbQ=
 github.com/gurbos/tcmodels v1.4.3-beta/go.mod h1:Uc5nRhWVPv/vNTQihYGC0UOl2unHLDvwUPZbL4NtOuo=
 github.com/jinzhu/inflection v1.0.0 h1:K317FqzuhWc8YvSVlFMCCUb36O/S9MCKRDI7QkRKD/E=
