@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/gurbos/tcgrws/v0/api"
 	data "github.com/gurbos/tcgrws/v0/dataAccess"
+	ep "github.com/gurbos/tcgrws/v0/endpoints"
 	res "github.com/gurbos/tcgrws/v0/resources"
 )
 
@@ -48,8 +48,8 @@ func (cqp *CardQueryParameters) Set(query *url.Values) error {
 	return cqpErr
 }
 
-func APIHandler(w http.ResponseWriter, r *http.Request) {
-	var ae api.APIEndpoints
+func EndPointsHandler(w http.ResponseWriter, r *http.Request) {
+	var ae ep.Endpoints
 	ae.Init()
 	jbuff, err := json.Marshal(ae)
 	if err != nil {

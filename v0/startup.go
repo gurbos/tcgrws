@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -24,4 +25,8 @@ func startUp() {
 	dbconn.SetMaxOpenConns(10)
 	dbconn.SetConnMaxIdleTime(5)
 	dbconn.SetConnMaxIdleTime(time.Hour)
+}
+
+func signalHandler(ctx context.Context) {
+
 }

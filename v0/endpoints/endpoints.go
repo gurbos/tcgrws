@@ -1,4 +1,4 @@
-package api
+package endpoints
 
 // Constants representing resource identifiers.
 const (
@@ -14,13 +14,13 @@ const (
 	CardsURL = "http://127.0.0.1:8000/cards?{productLineName,setName,from,size}"
 )
 
-type APIEndpoints struct {
+type Endpoints struct {
 	ProductLinesURL string `json:"productLinesUrl"`
 	MetaDataURL     string `json:"productLineSetsUrl"`
 	CardsURL        string `json:"productLineCardsUrl"`
 }
 
-func (ai *APIEndpoints) Init() {
+func (ai *Endpoints) Init() {
 	ai.ProductLinesURL = ProductLinesURL
 	ai.MetaDataURL = MetaDataURL
 	ai.CardsURL = CardsURL
