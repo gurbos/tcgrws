@@ -2,14 +2,16 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/gurbos/tcgrws/v0/dbio"
 	res "github.com/gurbos/tcgrws/v0/resources"
 )
 
-func startUp() {
+func loadConfiguration() {
 	var env environment
 	env.loadEnvironment()
 
@@ -27,6 +29,27 @@ func startUp() {
 	dbconn.SetConnMaxIdleTime(time.Hour)
 }
 
-func signalHandler(ctx context.Context) {
+func newSigChannels() *sigChannels {
+	return new(sigChannels)
+}
 
+type sigChannels struct {
+	sigChan <-chan os.Signal
+	rtnChan chan os.Signal
+}
+
+func (sc *sigChannels) init(sch chan os.Signal, dch chan os.Signal) {
+	sc.sigChan = sch
+	sc.rtnChan = dch
+}
+
+func receiveSig(ctx context.Context, ch *sigChannels) {
+	for {
+		sig := <-ch.sigChan
+		ch.rtnChan <- sig
+		if val := <-ctx.Done(); val == struct{}{} {
+			fmt.Println("receiveSig", ctx.Err().Error())
+			return
+		}
+	}
 }
