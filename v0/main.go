@@ -35,7 +35,8 @@ func main() {
 	sh := newServHandler()
 	sh.UseHandler(r)
 	for {
-		loadConfiguration()
+		config := new(appConfigData)
+		config.loadConfiguration()
 		port := os.Getenv("PORT")
 		if port == "" {
 			port = "5000"

@@ -1,7 +1,29 @@
 package resources
 
-var ImagesHost string
-var ImagesDir string
+func Config(imgHost string, imgDir string) {
+	ImageLocator = new(imageLocator)
+	ImageLocator.init(imgHost, imgDir)
+}
+
+type imageLocator struct {
+	imgHost string
+	imgDir  string
+}
+
+func (i *imageLocator) init(host string, dir string) {
+	i.imgHost = host
+	i.imgDir = dir
+}
+
+var ImageLocator *imageLocator
+
+func (i *imageLocator) ImgHost() string {
+	return i.imgHost
+}
+
+func (i *imageLocator) ImgDir() string {
+	return i.imgDir
+}
 
 type ProductLineRep struct {
 	ID        uint   `json:"Id"`
@@ -48,10 +70,6 @@ type CardRep struct {
 	ImageURL           string `json:"imageURL"`
 }
 
-func (cr *CardRep) Print() string {
-	return cr.Name
-}
-
 type ResponsePayload struct {
 	Errors      []string         `json:"errors"`
 	ProductLine []ProductLineRep `json:"productLine"`
@@ -76,5 +94,4 @@ func (rp *ResponsePayload) Set(errs []string, plInfos []ProductLineRep, csInfos 
 	} else {
 		rp.TotalCards = int64(rp.ProductLine[0].CardCount)
 	}
-
 }

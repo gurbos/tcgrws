@@ -11,12 +11,21 @@ import (
 	res "github.com/gurbos/tcgrws/v0/resources"
 )
 
-func loadConfiguration() {
+type appConfigData struct {
+	dbHost     string
+	dbPort     string
+	dbUser     string
+	dbPasswd   string
+	dbName     string
+	imagesHost string
+	imagesDir  string
+}
+
+func (cd *appConfigData) loadConfiguration() {
 	var env environment
 	env.loadEnvironment()
 
-	res.ImagesHost = env.imagesHost
-	res.ImagesDir = env.imagesDir
+	res.Config(env.imagesHost, env.imagesDir)
 	dbio.DataSource.Init(
 		env.dbHost, env.dbPort, env.dbUser, env.dbPasswd, env.dbName,
 	)
@@ -28,6 +37,8 @@ func loadConfiguration() {
 	dbconn.SetConnMaxIdleTime(5)
 	dbconn.SetConnMaxIdleTime(time.Hour)
 }
+
+var ServerConfig *appConfigData
 
 func newSigChannels() *sigChannels {
 	return new(sigChannels)

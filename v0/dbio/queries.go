@@ -8,8 +8,11 @@ import (
 	"gorm.io/gorm"
 )
 
-var DataSource DataSourceName
+type Config struct {
+}
+
 var DBConfig gorm.Config
+var DataSource *DataSourceName
 
 // DataSourceName attributes hold informaition about a specific database.
 // The information is used to connect to said database.
