@@ -3,12 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
-	"time"
+	"path/filepath"
 
-	"github.com/gurbos/tcgrws/v0/dbio"
-	res "github.com/gurbos/tcgrws/v0/resources"
+	"github.com/joho/godotenv"
 )
 
 type appConfigData struct {
@@ -21,21 +19,20 @@ type appConfigData struct {
 	imagesDir  string
 }
 
-func (cd *appConfigData) loadConfiguration() {
-	var env environment
-	env.loadEnvironment()
-
-	res.Config(env.imagesHost, env.imagesDir)
-	dbio.DataSource.Init(
-		env.dbHost, env.dbPort, env.dbUser, env.dbPasswd, env.dbName,
-	)
-	dbconn, err := dbio.DBConnection().DB()
+func (acd *appConfigData) loadConfiguration() {
+	wd, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
-	dbconn.SetMaxOpenConns(10)
-	dbconn.SetConnMaxIdleTime(5)
-	dbconn.SetConnMaxIdleTime(time.Hour)
+	parent := filepath.Dir(wd)
+	configFile := parent + "/config.env"
+	envMap, _ := godotenv.Unmarshal(configFile)
+
+	acd.dbHost = envMap["DB_HOST"]
+	acd.dbPort = envMap["DB_PORT"]
+	acd.dbUser = envMap["DB_USER"]
+	acd.dbPasswd = envMap["DB_PASSWD"]
+	acd.dbName = envMap["DB_NAME"]
 }
 
 var ServerConfig *appConfigData

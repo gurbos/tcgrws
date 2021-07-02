@@ -1,30 +1,5 @@
 package resources
 
-func Config(imgHost string, imgDir string) {
-	ImageLocator = new(imageLocator)
-	ImageLocator.init(imgHost, imgDir)
-}
-
-type imageLocator struct {
-	imgHost string
-	imgDir  string
-}
-
-func (i *imageLocator) init(host string, dir string) {
-	i.imgHost = host
-	i.imgDir = dir
-}
-
-var ImageLocator *imageLocator
-
-func (i *imageLocator) ImgHost() string {
-	return i.imgHost
-}
-
-func (i *imageLocator) ImgDir() string {
-	return i.imgDir
-}
-
 type ProductLineRep struct {
 	ID        uint   `json:"Id"`
 	Name      string `json:"name"`

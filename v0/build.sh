@@ -13,6 +13,8 @@ else
     go install -ldflags "-w -s"
 fi
 
+echo $GO_PATH
 # Change default binary name
 DEFAULT=`grep module go.mod | rev | cut -f1 -d/ | rev`
-mv -v $GO_PATH/$DEFAULT $GO_PATH/BIN_NAME
+echo $DEFAULT
+mv -v $GO_PATH/bin/$DEFAULT $GO_PATH/bin/$BIN_NAME

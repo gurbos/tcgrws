@@ -1,27 +1,32 @@
 package endpoints
 
-// Constants representing resource identifiers.
-const (
-	// Collection of all product line info
-	ProductLinesURL = "http://127.0.0.1:8000/productLines"
-
-	// List of all product line representations, and lists of all the sets,
-	// card types,  and rarities for the product line specified in the
-	// 'productLine' query parameter.
-	MetaDataURL = "http://127.0.0.1:8000/metaData{?productLine}"
-
-	// Collection of card representations
-	CardsURL = "http://127.0.0.1:8000/cards?{productLineName,setName,from,size}"
-)
-
-type Endpoints struct {
-	ProductLinesURL string `json:"productLinesUrl"`
-	MetaDataURL     string `json:"productLineSetsUrl"`
-	CardsURL        string `json:"productLineCardsUrl"`
+var endPoints = map[string]string{
+	"productLines": "/productLines",
+	"metaData":     "/metaData?{productLine}",
+	"cards":        "/cards?{productLineName,setName,from,size}",
 }
 
-func (ai *Endpoints) Init() {
-	ai.ProductLinesURL = ProductLinesURL
-	ai.MetaDataURL = MetaDataURL
-	ai.CardsURL = CardsURL
+type ResourceURLs struct {
+	host     string
+	endpoint map[string]string
+}
+
+func (ru *ResourceURLs) URL(name string) string {
+	return ru.host + ru.endpoint[name]
+}
+
+func (ru *ResourceURLs) ListEndpoints() []string {
+	list := make([]string, 0, len(ru.endpoint))
+	for key, _ := range ru.endpoint {
+		list = append(list, ru.endpoint[key])
+	}
+	return list
+}
+
+var ResourceUrls *ResourceURLs
+
+func Configure(publicHostName string) {
+	ResourceUrls = new(ResourceURLs)
+	ResourceUrls.host = publicHostName
+	ResourceUrls.endpoint = endPoints
 }

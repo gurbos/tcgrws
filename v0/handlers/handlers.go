@@ -49,13 +49,11 @@ func (cqp *CardQueryParameters) Set(query *url.Values) error {
 }
 
 func EndPointsHandler(w http.ResponseWriter, r *http.Request) {
-	var ae ep.Endpoints
-	ae.Init()
-	jbuff, err := json.Marshal(ae)
+	endPoints := ep.ResourceUrls.ListEndpoints()
+	jbuff, err := json.Marshal(&endPoints)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	w.Write(jbuff)
 }
 
