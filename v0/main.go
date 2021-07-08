@@ -17,7 +17,8 @@ func main() {
 	sigChans := newSigChannels()
 	sigChans.init(sigCh, rtnCh)
 
-	signal.Notify(sigCh,
+	signal.Notify(
+		sigCh,
 		syscall.SIGTERM,
 		syscall.SIGINT,
 		syscall.SIGHUP,

@@ -2,11 +2,7 @@ package main
 
 import (
 	"net/http"
-	"os"
-	"path/filepath"
 	"time"
-
-	"github.com/joho/godotenv"
 )
 
 type environment struct {
@@ -21,13 +17,13 @@ type environment struct {
 }
 
 func (e *environment) loadEnvironment() {
-	wd, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-	parent := filepath.Dir(wd)
-	configFile := parent + "/config.env"
-	envMap, _ := godotenv.Unmarshal(configFile)
+	// wd, err := os.Getwd()
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// parent := filepath.Dir(wd)
+	// configFile := parent + "/config.env"
+	// envMap, _ := godotenv.Unmarshal(configFile)
 
 	// var pres bool
 	// if e.dbHost = os.Getenv("TCG_DB_HOST"); e.dbHost == "" {

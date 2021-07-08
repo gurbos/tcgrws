@@ -23,10 +23,10 @@ func (ru *ResourceURLs) ListEndpoints() []string {
 	return list
 }
 
-var ResourceUrls *ResourceURLs
+var Urls *ResourceURLs
 
 func Configure(publicHostName string) {
-	ResourceUrls = new(ResourceURLs)
-	ResourceUrls.host = publicHostName
-	ResourceUrls.endpoint = endPoints
+	Urls = new(ResourceURLs)
+	Urls.host = publicHostName
+	Urls.endpoint = endPoints
 }

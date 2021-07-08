@@ -1,8 +1,6 @@
 package dataAccess
 
 import (
-	"strconv"
-
 	res "github.com/gurbos/tcgrws/v0/resources"
 	tcm "github.com/gurbos/tcmodels"
 )
@@ -68,5 +66,5 @@ func setCard(cr *res.CardRep, cm *tcm.YuGiOhCardInfo) {
 	cr.SetID = cm.SetID
 	cr.SetName = cm.SetInfo.Name
 	cr.SetURLName = cm.SetInfo.URLName
-	cr.ImageURL = res.ImageLocator.ImgHost() + "/" + cr.ProductLineURLName + "/" + strconv.Itoa(int(cr.ID))
+	// cr.ImageURL = res.ImageLocator.ImgHost() + "/" + cr.ProductLineURLName + "/" + strconv.Itoa(int(cr.ID))
 }

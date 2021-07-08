@@ -8,7 +8,9 @@ import (
 	"gorm.io/gorm"
 )
 
-type Config struct {
+func Configure(host string, port string, user string, pass string, name string) {
+	DataSource := new(DataSourceName)
+	DataSource.Init(host, port, user, pass, name)
 }
 
 var DBConfig gorm.Config
@@ -20,9 +22,9 @@ type DataSourceName struct {
 	connStr string
 }
 
-func (dsn *DataSourceName) Init(host string, port string, user string, passwd string, name string) {
+func (dsn *DataSourceName) Init(host string, port string, user string, pass string, name string) {
 	format := "%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local"
-	dsn.connStr = fmt.Sprintf(format, user, passwd, host, port, name)
+	dsn.connStr = fmt.Sprintf(format, user, pass, host, port, name)
 }
 
 // DSNString returns a database connection string

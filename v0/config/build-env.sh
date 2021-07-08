@@ -32,16 +32,32 @@ if [ "$DB_PORT" == "" ]; then
 fi
 ENV_VARS="${ENV_VARS}DB_PORT=$DB_PORT\n"
 
+# Database username
 if [ "$DB_USER" == "" ]; then
     echo "ERROR: Could not get database user name!"
     exit 1
 fi
 ENV_VARS="${ENV_VARS}DB_USER=$DB_USER\n"
 
+# Database user password
+if [ "$DB_PASS" == "" ]; then
+    echo "ERROR: Could not get database user password!"
+    exit 1
+fi
+ENV_VARS="${ENV_VARS}DB_PASS=$DB_PASS\n"
+
+# Database name
+if [ "$DB_NAME" == "" ]; then
+    echo "ERROR: Could not get database name!"
+    exit 1
+fi
+ENV_VARS="${ENV_VARS}DB_NAME=$DB_NAME\n"
+
+# Static content path
 if [ "$STATIC_CONTENT" == "" ]; then
     echo "ERROR: Could not get static content path!"
     exit 1
 fi
 ENV_VARS="${ENV_VARS}STATIC_CONTENT=$STATIC_CONTENT\n"
-
+cd ..
 echo -e $ENV_VARS > $CONFIG_FILE

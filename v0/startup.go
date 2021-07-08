@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -10,13 +11,13 @@ import (
 )
 
 type appConfigData struct {
-	dbHost     string
-	dbPort     string
-	dbUser     string
-	dbPasswd   string
-	dbName     string
-	imagesHost string
-	imagesDir  string
+	dbHost        string
+	dbPort        string
+	dbUser        string
+	dbPass        string
+	dbName        string
+	host          string
+	staticContent string
 }
 
 func (acd *appConfigData) loadConfiguration() {
@@ -26,13 +27,19 @@ func (acd *appConfigData) loadConfiguration() {
 	}
 	parent := filepath.Dir(wd)
 	configFile := parent + "/config.env"
-	envMap, _ := godotenv.Unmarshal(configFile)
+	envMap, err := godotenv.Read(configFile)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	acd.dbHost = envMap["DB_HOST"]
 	acd.dbPort = envMap["DB_PORT"]
 	acd.dbUser = envMap["DB_USER"]
-	acd.dbPasswd = envMap["DB_PASSWD"]
+	acd.dbPass = envMap["DB_PASS"]
 	acd.dbName = envMap["DB_NAME"]
+	acd.host = envMap["PUBLIC_HOSTNAME"]
+	acd.staticContent = envMap["STATIC_CONTENT"]
+
 }
 
 var ServerConfig *appConfigData
