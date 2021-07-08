@@ -35,7 +35,7 @@ func startHttpServer(config *serverConfig) *http.Server {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
-			log.Fatal("ListenAndServe() %v", err)
+			log.Fatal("ListenAndServe(): ", err)
 		}
 	}()
 	return srv

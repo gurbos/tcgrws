@@ -44,7 +44,7 @@ if [ "$DB_PASS" == "" ]; then
     echo "ERROR: Could not get database user password!"
     exit 1
 fi
-ENV_VARS="${ENV_VARS}DB_PASS=$DB_PASS\n"
+ENV_VARS="${ENV_VARS}DB_PASS=\"$DB_PASS\"\n"
 
 # Database name
 if [ "$DB_NAME" == "" ]; then

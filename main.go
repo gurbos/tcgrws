@@ -37,7 +37,7 @@ func main() {
 	sh.UseHandler(r)
 	for {
 		config := new(appConfigData)
-		config.loadConfiguration()
+		config.configure()
 		port := os.Getenv("PORT")
 		if port == "" {
 			port = "5000"

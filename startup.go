@@ -7,6 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/gurbos/tcgrws/dbio"
+	"github.com/gurbos/tcgrws/endpoints"
+	"github.com/gurbos/tcgrws/handlers"
 	"github.com/joho/godotenv"
 )
 
@@ -21,11 +24,18 @@ type appConfigData struct {
 }
 
 func (acd *appConfigData) loadConfiguration() {
+	var parent string
 	wd, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
-	parent := filepath.Dir(wd)
+
+	if pwd := filepath.Base(wd); pwd == "bin" {
+		parent = filepath.Dir(wd)
+	} else {
+		parent = wd
+	}
+
 	configFile := parent + "/config.env"
 	envMap, err := godotenv.Read(configFile)
 	if err != nil {
@@ -39,7 +49,13 @@ func (acd *appConfigData) loadConfiguration() {
 	acd.dbName = envMap["DB_NAME"]
 	acd.host = envMap["PUBLIC_HOSTNAME"]
 	acd.staticContent = envMap["STATIC_CONTENT"]
+}
 
+func (acd *appConfigData) configure() {
+	acd.loadConfiguration()
+	dbio.Configure(acd.dbHost, acd.dbPort, acd.dbUser, acd.dbPass, acd.dbName)
+	endpoints.Configure(acd.host)
+	handlers.Configure(acd.staticContent)
 }
 
 var ServerConfig *appConfigData
