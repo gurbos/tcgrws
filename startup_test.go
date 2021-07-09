@@ -7,7 +7,7 @@ import (
 
 func TestAppConfigData(t *testing.T) {
 	c := new(appConfigData)
-	c.loadConfiguration()
+	c.loadConfigData()
 	switch {
 	case c.dbHost == "":
 		t.Error("Database host name not present")

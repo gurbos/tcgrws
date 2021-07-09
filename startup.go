@@ -4,12 +4,18 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
+	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/gurbos/tcgrws/dbio"
 	"github.com/gurbos/tcgrws/endpoints"
 	"github.com/gurbos/tcgrws/handlers"
+	handler "github.com/gurbos/tcgrws/handlers"
 	"github.com/joho/godotenv"
 )
 
@@ -21,9 +27,13 @@ type appConfigData struct {
 	dbName        string
 	host          string
 	staticContent string
+	listenAddr    string
+	readTimeout   time.Duration
+	writeTimeout  time.Duration
+	handler       http.Handler
 }
 
-func (acd *appConfigData) loadConfiguration() {
+func (acd *appConfigData) loadConfigData() {
 	var parent string
 	wd, err := os.Getwd()
 	if err != nil {
@@ -49,38 +59,67 @@ func (acd *appConfigData) loadConfiguration() {
 	acd.dbName = envMap["DB_NAME"]
 	acd.host = envMap["PUBLIC_HOSTNAME"]
 	acd.staticContent = envMap["STATIC_CONTENT"]
+	acd.listenAddr = envMap["LISTEN_ADDRESS"]
 }
 
-func (acd *appConfigData) configure() {
-	acd.loadConfiguration()
+func (acd *appConfigData) configurePackages() {
 	dbio.Configure(acd.dbHost, acd.dbPort, acd.dbUser, acd.dbPass, acd.dbName)
 	endpoints.Configure(acd.host)
 	handlers.Configure(acd.staticContent)
 }
 
-var ServerConfig *appConfigData
+func (acd *appConfigData) loadAndConfigure() {
+	acd.loadConfigData()
+	acd.configurePackages()
+}
+
+func (acd *appConfigData) configureRoutes() {
+	r := mux.NewRouter()
+	r.HandleFunc("/", handler.EndPointsHandler).Methods("GET")
+	r.HandleFunc("/productLines", handler.ProductLineHandler).Methods("GET")
+	r.HandleFunc("/metaData", handler.MetaDataHandler).Methods("GET")
+	r.HandleFunc("/cards", handler.CardsHandler).Methods("GET")
+	handler := newServHandler()
+	handler.UseHandler(r)
+}
 
 func newSigChannels() *sigChannels {
 	return new(sigChannels)
 }
 
 type sigChannels struct {
-	sigChan <-chan os.Signal
-	rtnChan chan os.Signal
+	sigChan    <-chan os.Signal
+	notifyChan chan os.Signal
 }
 
 func (sc *sigChannels) init(sch chan os.Signal, dch chan os.Signal) {
 	sc.sigChan = sch
-	sc.rtnChan = dch
+	sc.notifyChan = dch
 }
 
 func receiveSig(ctx context.Context, ch *sigChannels) {
 	for {
 		sig := <-ch.sigChan
-		ch.rtnChan <- sig
+		ch.notifyChan <- sig
 		if val := <-ctx.Done(); val == struct{}{} {
 			fmt.Println("receiveSig", ctx.Err().Error())
 			return
 		}
 	}
+}
+
+func setupSignalHandling(sigCtx context.Context) chan os.Signal {
+	sigCh := make(chan os.Signal, 1)
+	notifyCh := make(chan os.Signal, 1)
+	sigChans := newSigChannels()
+	sigChans.init(sigCh, notifyCh)
+
+	signal.Notify(
+		sigCh,
+		syscall.SIGTERM,
+		syscall.SIGINT,
+		syscall.SIGHUP,
+	)
+	go receiveSig(sigCtx, sigChans)
+	return notifyCh
 }

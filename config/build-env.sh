@@ -59,5 +59,9 @@ if [ "$STATIC_CONTENT" == "" ]; then
     exit 1
 fi
 ENV_VARS="${ENV_VARS}STATIC_CONTENT=$STATIC_CONTENT\n"
+
+# Server listen address
+ENV_VARS="${ENV_VARS}LISTEN_ADDRESS=$LISTEN_ADDRESS\n"
+
 cd ..
 echo -e $ENV_VARS > $CONFIG_FILE

@@ -2,61 +2,35 @@ package main
 
 import (
 	"context"
-	"os"
-	"os/signal"
 	"syscall"
-	"time"
-
-	"github.com/gorilla/mux"
-	handler "github.com/gurbos/tcgrws/handlers"
 )
 
 func main() {
-	sigCh := make(chan os.Signal, 1)
-	rtnCh := make(chan os.Signal, 1)
-	sigChans := newSigChannels()
-	sigChans.init(sigCh, rtnCh)
+	// Startup configuration
+	config := new(appConfigData)
+	config.loadAndConfigure()
 
-	signal.Notify(
-		sigCh,
-		syscall.SIGTERM,
-		syscall.SIGINT,
-		syscall.SIGHUP,
-	)
-	ctx := context.Background()
-	c, cancel := context.WithCancel(ctx)
-	go receiveSig(c, sigChans)
+	rootCtx := context.Background()
+	sigCtx, cancel := context.WithCancel(rootCtx)
 
-	r := mux.NewRouter()
-	r.HandleFunc("/", handler.EndPointsHandler).Methods("GET")
-	r.HandleFunc("/productLines", handler.ProductLineHandler).Methods("GET")
-	r.HandleFunc("/metaData", handler.MetaDataHandler).Methods("GET")
-	r.HandleFunc("/cards", handler.CardsHandler).Methods("GET")
+	// Setup signal handler goroutine and get a channel
+	// to receive signals caught by the handler.
+	recvSigCh := setupSignalHandling(sigCtx)
 
-	sh := newServHandler()
-	sh.UseHandler(r)
 	for {
-		config := new(appConfigData)
-		config.configure()
-		port := os.Getenv("PORT")
-		if port == "" {
-			port = "5000"
-		}
-		addr := ":" + port
+		server := startHttpServer(config)
 
-		servConf := newServerConfig()
-		servConf.init(sh, addr, 5*time.Second, 5*time.Second)
-		server := startHttpServer(servConf)
-
-		sig := <-rtnCh
+		sig := <-recvSigCh
 		switch sig {
 		case syscall.SIGHUP:
-			if err := server.Shutdown(ctx); err != nil {
+			if err := server.Shutdown(rootCtx); err != nil {
 				panic(err)
 			}
+			config = new(appConfigData)
+			config.loadAndConfigure()
 		case syscall.SIGTERM, syscall.SIGINT:
 			cancel()
-			if err := server.Shutdown(ctx); err != nil {
+			if err := server.Shutdown(rootCtx); err != nil {
 				panic(err)
 			}
 		}
