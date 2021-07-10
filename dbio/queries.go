@@ -2,19 +2,31 @@ package dbio
 
 import (
 	"fmt"
+	"time"
 
 	tcm "github.com/gurbos/tcmodels"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
-func Configure(host string, port string, user string, pass string, name string) {
-	DataSource := new(DataSourceName)
-	DataSource.Init(host, port, user, pass, name)
-}
+func Configure(host string, port string, user string,
+	pass string, name string, maxOpenConns int, maxIdleConns int,
+	maxConnLifetime time.Duration, maxConnIdleTime time.Duration) {
 
-var DBConfig gorm.Config
-var DataSource *DataSourceName
+	DataSource = new(DataSourceName)
+	DataSource.Init(host, port, user, pass, name)
+	dbConn = DBConnection()
+
+	// Database connection pool configuration
+	sqlConn, err := dbConn.DB()
+	if err != nil {
+		panic("gorm.DB(): " + err.Error())
+	}
+	sqlConn.SetMaxOpenConns(maxOpenConns)
+	sqlConn.SetMaxIdleConns(maxIdleConns)
+	sqlConn.SetConnMaxLifetime(maxConnLifetime)
+	sqlConn.SetConnMaxIdleTime(maxConnIdleTime)
+}
 
 // DataSourceName attributes hold informaition about a specific database.
 // The information is used to connect to said database.
@@ -22,7 +34,9 @@ type DataSourceName struct {
 	connStr string
 }
 
-func (dsn *DataSourceName) Init(host string, port string, user string, pass string, name string) {
+// Init
+func (dsn *DataSourceName) Init(
+	host string, port string, user string, pass string, name string) {
 	format := "%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local"
 	dsn.connStr = fmt.Sprintf(format, user, pass, host, port, name)
 }
@@ -32,8 +46,15 @@ func (dsn *DataSourceName) ConnString() string {
 	return dsn.connStr
 }
 
+var DataSource *DataSourceName
+var gormConfig gorm.Config
+var dbConn *gorm.DB
+
 func DBConnection() *gorm.DB {
-	conn, _ := gorm.Open(mysql.Open(DataSource.ConnString()), &DBConfig)
+	conn, err := gorm.Open(mysql.Open(DataSource.ConnString()), &gorm.Config{})
+	if err != nil {
+		panic("gorm.Open(): " + err.Error())
+	}
 	return conn
 }
 

@@ -9,15 +9,11 @@ import (
 // It implements the http.Hander interface and sets the response headers
 // for every incoming http.Request.
 type servHandler struct {
-	handler http.Handler
-}
-
-func newServHandler() *servHandler {
-	return new(servHandler)
+	baseHandler http.Handler
 }
 
 func (sh *servHandler) UseHandler(h http.Handler) {
-	sh.handler = h
+	sh.baseHandler = h
 }
 
 func (sh *servHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -27,5 +23,11 @@ func (sh *servHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		dateStr := time.Now().Format(time.RFC1123)
 		w.Header().Set("Date", dateStr)
 	}
-	sh.handler.ServeHTTP(w, r)
+	sh.baseHandler.ServeHTTP(w, r)
+}
+
+func newServHandler(bh http.Handler) http.Handler {
+	sh := new(servHandler)
+	sh.UseHandler(bh)
+	return sh
 }

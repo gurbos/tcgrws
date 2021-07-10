@@ -28,6 +28,7 @@ func main() {
 			}
 			config = new(appConfigData)
 			config.loadAndConfigure()
+
 		case syscall.SIGTERM, syscall.SIGINT:
 			cancel()
 			if err := server.Shutdown(rootCtx); err != nil {

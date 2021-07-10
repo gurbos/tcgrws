@@ -1,21 +1,21 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 )
 
 func startHttpServer(config *appConfigData) *http.Server {
 	srv := &http.Server{
-		Handler:      config.handler,
-		Addr:         config.listenAddr,
+		Handler:      config.servHandler,
+		Addr:         config.listenAddr + config.listenPort,
 		ReadTimeout:  config.readTimeout,
 		WriteTimeout: config.writeTimeout,
 	}
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
-			log.Fatal("ListenAndServe(): ", err)
+			fmt.Println("ListenAndServe(): ", err)
 		}
 	}()
 	return srv

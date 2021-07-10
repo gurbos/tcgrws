@@ -12,12 +12,7 @@ import (
 	res "github.com/gurbos/tcgrws/resources"
 )
 
-func Configure(staticContDir string) {
-	staticContentDir = staticContDir
-}
-
 var (
-	staticContentDir    string
 	defCardResultOffset int64 = 0
 	defCardResultLength int64 = 10
 )
@@ -53,9 +48,9 @@ func (cqp *CardQueryParameters) Set(query *url.Values) error {
 	return cqpErr
 }
 
-func EndPointsHandler(w http.ResponseWriter, r *http.Request) {
-	endPoints := ep.Urls.ListEndpoints()
-	jbuff, err := json.Marshal(&endPoints)
+func ApiRefHandler(w http.ResponseWriter, r *http.Request) {
+	apiRef := ep.Urls.ListApiReference()
+	jbuff, err := json.Marshal(&apiRef)
 	if err != nil {
 		log.Fatal(err)
 	}

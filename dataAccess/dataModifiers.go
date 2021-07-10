@@ -1,6 +1,9 @@
 package dataAccess
 
 import (
+	"strconv"
+
+	ep "github.com/gurbos/tcgrws/endpoints"
 	res "github.com/gurbos/tcgrws/resources"
 	tcm "github.com/gurbos/tcmodels"
 )
@@ -22,9 +25,10 @@ func toSetRepList(setInfos []tcm.SetInfo) []res.SetRep {
 }
 
 func toCardRepList(cards []tcm.YuGiOhCardInfo) []res.CardRep {
+	imagesUrl := ep.Urls.URL("images")
 	cardReps := make([]res.CardRep, len(cards))
 	for i, elem := range cards {
-		setCard(&cardReps[i], &elem)
+		setCard(&cardReps[i], &elem, imagesUrl)
 	}
 	return cardReps
 }
@@ -45,7 +49,7 @@ func setSet(sr *res.SetRep, sm *tcm.SetInfo) {
 	sr.CardCount = sm.CardCount
 }
 
-func setCard(cr *res.CardRep, cm *tcm.YuGiOhCardInfo) {
+func setCard(cr *res.CardRep, cm *tcm.YuGiOhCardInfo, imagesUrl string) {
 	cr.ID = cm.ID
 	cr.Name = cm.Name
 	cr.Number = cm.Number
@@ -66,5 +70,5 @@ func setCard(cr *res.CardRep, cm *tcm.YuGiOhCardInfo) {
 	cr.SetID = cm.SetID
 	cr.SetName = cm.SetInfo.Name
 	cr.SetURLName = cm.SetInfo.URLName
-	// cr.ImageURL = res.ImageLocator.ImgHost() + "/" + cr.ProductLineURLName + "/" + strconv.Itoa(int(cr.ID))
+	cr.ImageURL = imagesUrl + "/" + strconv.Itoa(int(cr.ID)) + "_200w.jpg"
 }

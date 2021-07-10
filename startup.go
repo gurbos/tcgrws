@@ -3,11 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -15,43 +14,47 @@ import (
 	"github.com/gurbos/tcgrws/dbio"
 	"github.com/gurbos/tcgrws/endpoints"
 	"github.com/gurbos/tcgrws/handlers"
-	handler "github.com/gurbos/tcgrws/handlers"
 	"github.com/joho/godotenv"
 )
 
 type appConfigData struct {
-	dbHost        string
-	dbPort        string
-	dbUser        string
-	dbPass        string
-	dbName        string
-	host          string
-	staticContent string
-	listenAddr    string
-	readTimeout   time.Duration
-	writeTimeout  time.Duration
-	handler       http.Handler
+	dbHost          string
+	dbPort          string
+	dbUser          string
+	dbPass          string
+	dbName          string
+	maxOpenConns    int
+	maxIdleConns    int
+	maxConnLifetime time.Duration
+	maxConnIdleTime time.Duration
+	host            string
+	staticContent   string
+	listenAddr      string
+	listenPort      string
+	readTimeout     time.Duration
+	writeTimeout    time.Duration
+	servHandler     http.Handler
 }
 
 func (acd *appConfigData) loadConfigData() {
-	var parent string
-	wd, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-
-	if pwd := filepath.Base(wd); pwd == "bin" {
-		parent = filepath.Dir(wd)
-	} else {
-		parent = wd
-	}
-
-	configFile := parent + "/config.env"
+	configFile := os.Getenv("TCGRWS_CONFIG_FILE") // Get absolute path to configuration file
 	envMap, err := godotenv.Read(configFile)
 	if err != nil {
-		log.Fatal(err)
+		panic("godotenv.Read(): " + err.Error())
 	}
 
+	openConns, err := strconv.Atoi(envMap["MAX_OPEN_CONNS"])
+	idleConns, err := strconv.Atoi(envMap["MAX_IDLE_CONNS"])
+	connLifetime, err := strconv.Atoi(envMap["MAX_CONN_LIFETIME_MIN"])
+	connIdleTime, err := strconv.Atoi(envMap["MAX_CONN_IDLE_TIME_MIN"])
+	rt, err := strconv.Atoi(envMap["READ_TIMEOUT_SEC"])
+	wt, err := strconv.Atoi(envMap["WRITE_TIMEOUT_SEC"])
+	if err != nil {
+		panic("strconv.Atoi(): " + err.Error())
+	}
+
+	acd.readTimeout = time.Duration(rt * int(time.Second))
+	acd.writeTimeout = time.Duration(wt * int(time.Second))
 	acd.dbHost = envMap["DB_HOST"]
 	acd.dbPort = envMap["DB_PORT"]
 	acd.dbUser = envMap["DB_USER"]
@@ -60,27 +63,35 @@ func (acd *appConfigData) loadConfigData() {
 	acd.host = envMap["PUBLIC_HOSTNAME"]
 	acd.staticContent = envMap["STATIC_CONTENT"]
 	acd.listenAddr = envMap["LISTEN_ADDRESS"]
+	acd.listenPort = envMap["LISTEN_PORT"]
+	acd.maxOpenConns = openConns
+	acd.maxIdleConns = idleConns
+	acd.maxConnLifetime = time.Duration(connLifetime * int(time.Minute))
+	acd.maxConnIdleTime = time.Duration(connIdleTime * int(time.Minute))
 }
 
 func (acd *appConfigData) configurePackages() {
-	dbio.Configure(acd.dbHost, acd.dbPort, acd.dbUser, acd.dbPass, acd.dbName)
+	dbio.Configure(acd.dbHost, acd.dbPort, acd.dbUser,
+		acd.dbPass, acd.dbName, acd.maxOpenConns,
+		acd.maxIdleConns, acd.maxConnLifetime,
+		acd.maxConnIdleTime,
+	)
 	endpoints.Configure(acd.host)
-	handlers.Configure(acd.staticContent)
+}
+
+func (acd *appConfigData) configureRoutes() {
+	r := mux.NewRouter()
+	r.HandleFunc("/", handlers.ApiRefHandler).Methods("GET")
+	r.HandleFunc("/productLines", handlers.ProductLineHandler).Methods("GET")
+	r.HandleFunc("/metaData", handlers.MetaDataHandler).Methods("GET")
+	r.HandleFunc("/cards", handlers.CardsHandler).Methods("GET")
+	acd.servHandler = newServHandler(r)
 }
 
 func (acd *appConfigData) loadAndConfigure() {
 	acd.loadConfigData()
 	acd.configurePackages()
-}
-
-func (acd *appConfigData) configureRoutes() {
-	r := mux.NewRouter()
-	r.HandleFunc("/", handler.EndPointsHandler).Methods("GET")
-	r.HandleFunc("/productLines", handler.ProductLineHandler).Methods("GET")
-	r.HandleFunc("/metaData", handler.MetaDataHandler).Methods("GET")
-	r.HandleFunc("/cards", handler.CardsHandler).Methods("GET")
-	handler := newServHandler()
-	handler.UseHandler(r)
+	acd.configureRoutes()
 }
 
 func newSigChannels() *sigChannels {
@@ -97,12 +108,12 @@ func (sc *sigChannels) init(sch chan os.Signal, dch chan os.Signal) {
 	sc.notifyChan = dch
 }
 
-func receiveSig(ctx context.Context, ch *sigChannels) {
+func sigHandler(ctx context.Context, ch *sigChannels) {
 	for {
 		sig := <-ch.sigChan
 		ch.notifyChan <- sig
 		if val := <-ctx.Done(); val == struct{}{} {
-			fmt.Println("receiveSig", ctx.Err().Error())
+			fmt.Println("sigHandler", ctx.Err().Error())
 			return
 		}
 	}
@@ -120,6 +131,7 @@ func setupSignalHandling(sigCtx context.Context) chan os.Signal {
 		syscall.SIGINT,
 		syscall.SIGHUP,
 	)
-	go receiveSig(sigCtx, sigChans)
+
+	go sigHandler(sigCtx, sigChans)
 	return notifyCh
 }
