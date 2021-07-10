@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -110,10 +109,10 @@ func (sc *sigChannels) init(sch chan os.Signal, dch chan os.Signal) {
 
 func sigHandler(ctx context.Context, ch *sigChannels) {
 	for {
-		sig := <-ch.sigChan
-		ch.notifyChan <- sig
-		if val := <-ctx.Done(); val == struct{}{} {
-			fmt.Println("sigHandler", ctx.Err().Error())
+		select {
+		case sig := <-ch.sigChan:
+			ch.notifyChan <- sig
+		case <-ctx.Done():
 			return
 		}
 	}
