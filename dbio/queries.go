@@ -48,7 +48,7 @@ func (dsn *DataSourceName) ConnString() string {
 
 var DataSource *DataSourceName
 var gormConfig gorm.Config
-var dbConn *gorm.DB
+var dbConn *gorm.DB // Connection pool handle
 
 func DBConnection() *gorm.DB {
 	conn, err := gorm.Open(mysql.Open(DataSource.ConnString()), &gorm.Config{})
@@ -81,19 +81,15 @@ func QuerySets(productLineIDs []int64, setNames []string) ([]tcm.SetInfo, error)
 	var setInfos []tcm.SetInfo // Database query results
 	var qErr error             // Database query error
 
-	qm := make(map[string]interface{})
-	dbconn := DBConnection() // Get database connection handle
-	if dbconn.Error == nil {
-		switch {
-		case len(productLineIDs) > 0:
-			qm["product_line_id"] = &productLineIDs
-		case len(setNames) > 0:
-			qm["url_name"] = &setNames
-		}
-		qErr = dbconn.Model(tcm.SetInfo{}).Where(qm).Find(&setInfos).Error
-	} else {
-		qErr = dbconn.Error
+	qm := make(map[string]interface{}) // Used to filter records in sql WHERE clause, e.g. WHERE key IN value
+
+	if len(productLineIDs) > 0 {
+		qm["product_line_id"] = &productLineIDs
 	}
+	if len(setNames) > 0 {
+		qm["url_name"] = &setNames
+	}
+	qErr = dbConn.Model(tcm.SetInfo{}).Where(qm).Find(&setInfos).Error
 
 	return setInfos, qErr
 }

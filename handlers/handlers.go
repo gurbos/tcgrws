@@ -79,12 +79,15 @@ func ProductLineHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func MetaDataHandler(w http.ResponseWriter, r *http.Request) {
-	respErrs := make([]string, 0, 2) // Error list for the response payload
+	respErrs := make([]string, 0) // Error list for the response payload
 	productLineReps, err := data.GetAllProductLines()
 	if err != nil {
 		log.Fatal(err)
 	}
-	setReps, err := data.GetSets([]int64{}, []string{})
+	productLineId, err := strconv.Atoi(r.URL.Query().Get("productLineId"))
+	if err != nil {
+	}
+	setReps, err := data.GetSets([]int64{int64(productLineId)}, []string{})
 	if err != nil {
 		log.Fatal(err)
 	}
