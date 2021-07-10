@@ -34,6 +34,7 @@ func main() {
 			if err := server.Shutdown(rootCtx); err != nil {
 				panic(err)
 			}
+			return
 		}
 	}
 }
