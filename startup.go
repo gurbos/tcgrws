@@ -76,6 +76,7 @@ func (acd *appConfigData) configurePackages() {
 		acd.maxIdleConns, acd.maxConnLifetime,
 		acd.maxConnIdleTime,
 	)
+	handlers.Configure(acd.staticContent)
 	endpoints.Configure(acd.host)
 }
 
@@ -85,6 +86,7 @@ func (acd *appConfigData) configureRoutes() {
 	r.HandleFunc("/productLines", handlers.ProductLineHandler).Methods("GET")
 	r.HandleFunc("/metaData", handlers.MetaDataHandler).Methods("GET")
 	r.HandleFunc("/cards", handlers.CardsHandler).Methods("GET")
+	r.HandleFunc("/images/{name}", handlers.ImagesHandler).Methods("GET")
 	acd.servHandler = newServHandler(r)
 }
 

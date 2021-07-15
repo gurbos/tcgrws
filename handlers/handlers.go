@@ -13,9 +13,14 @@ import (
 )
 
 var (
+	staticContentDir    string
 	defCardResultOffset int64 = 0
 	defCardResultLength int64 = 10
 )
+
+func Configure(staticDir string) {
+	staticContentDir = staticDir
+}
 
 type CardQueryParameters struct {
 	ProductLineName []string
@@ -134,6 +139,11 @@ func CardsHandler(w http.ResponseWriter, r *http.Request) {
 		qParams.Offset, qParams.Length)
 	jbuff, _ := json.Marshal(respPayload)
 	w.Write(jbuff)
+}
+
+func ImagesHandler(w http.ResponseWriter, r *http.Request) {
+	path := staticContentDir + r.URL.Path
+	http.ServeFile(w, r, path)
 }
 
 // getProductLineIDs creates a list of product line IDs
